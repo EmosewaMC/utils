@@ -1,0 +1,25 @@
+Component 77 - SoundTrigger
+Index 1 ($+939820):
+[bit] - flag
+	[u8] - count
+		[u8-string] - cue_name
+		[u32] - result
+		[float] - boredom_time
+	[u8] - count
+		[u8-string] - cue_name
+		[float] - boredom_time
+	[u8] - count
+		[u32] - cue_name
+		[u16] - cue_name
+		[u16] - cue_name
+		[u64] - cue_name
+		[u32] - result
+	[u8] - count
+		[u32] - cue_name
+		[u16] - cue_name
+		[u16] - cue_name
+		[u64] - cue_name
+		[u32] - result
+	[u8] - count
+		[u8-string] - cue_name
+		[u32] - boredom_time

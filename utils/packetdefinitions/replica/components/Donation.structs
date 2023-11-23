@@ -1,0 +1,9 @@
+Component 100 - Donation (tested using LOT 13773)
+Index 1 ($+939820):
+[bit] - flag
+	[bit] - flag
+	[bit] - flag
+[bit] - flag
+	[float] - ???
+	[u32] - ???
+	[u32] - ???

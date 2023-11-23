@@ -1,39 +1,40 @@
 Component 7 - Destructible (tested using LOT 1)
 Index 1 ($+939820):
 if creation:
-	[bit] - flag, expect == False
+	[bit] - flag
 		[u32] - count for following structs
-			[u32] - ???
-			[bit] - flag
-				[u32] - ???
-			[bit] - ???
-			[bit] - ???
-			[bit] - ???
-			[bit] - ???
-			[bit] - ???
-			[bit] - ???
-			[bit] - ???
-			[bit] - ???
-			trigger=[bit] - ???, seems to trigger [s64] below?
-			[bit] - ???
+			[u32] - buffId
+			[bit] - timeRemainingNonZero
+				[u32] - timeRemainingMs
+			[bit] - CancelOnDeath
+			[bit] - CancelOnZone
+			[bit] - CancelOnDamaged
+			[bit] - CancelOnRemoveBuff
+			[bit] - CancelOnUi
+			[bit] - CancelOnLogout
+			[bit] - CancelOnUnequip
+			[bit] - CancelOnDamageAbsorbRanOut
+			trigger=[bit] - AddedByTeammate
+			[bit] - ApplyOnTeammates
 			if trigger:
-				[s64] - ???
-			[u32] - ???
-	[bit] - flag, expect == False
+				[s64] - teammateObjId
+			[u32] - refCount
+	[bit] - flag
 		[u32] - count for following structs
-			[u32] - ???
-			[bit] - flag
-				[u32] - ???
-			[bit] - ???
-			[bit] - ???
-			[bit] - ???
-			[bit] - ???
-			[bit] - ???
-			[bit] - ???
-			[bit] - ???
-			[bit] - ???
-			trigger=[bit] - ???, seems to trigger [s64] below?
-			[bit] - ???
+			[u32] - buffId
+			[bit] - timeRemainingNonZero
+				[u32] - timeRemainingMs
+			[bit] - CancelOnDeath
+			[bit] - CancelOnZone
+			[bit] - CancelOnDamaged
+			[bit] - CancelOnRemoveBuff
+			[bit] - CancelOnUi
+			[bit] - CancelOnLogout
+			[bit] - CancelOnUnequip
+			[bit] - CancelOnDamageAbsorbRanOut
+			[bit] - AddedByTeammate
+			[bit] - ApplyOnTeammates
+			trigger=[bit] - AddedByTeammate
 			if trigger:
-				[s64] - ???
-			[u32] - ???
+				[s64] - teammateObjId
+			[u32] - refCount

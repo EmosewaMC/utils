@@ -31,7 +31,7 @@ class Viewer(Frame):
 		find_entry.pack(fill=X)
 		find_entry.bind("<Return>", self._find)
 
-		pane = Panedwindow(orient=HORIZONTAL, width=self.winfo_screenwidth(), height=self.winfo_screenheight())
+		pane = Panedwindow(orient=HORIZONTAL, width=int(self.winfo_screenwidth()/3), height=int(self.winfo_screenheight()/3))
 		
 		pane.pack(fill=BOTH, expand=True)
 

@@ -23,7 +23,7 @@ def from_ldf(ldf):
 				value = ldf.read(bytes, length=ldf.read(c_uint))
 			else:
 				raise NotImplementedError(key, data_type_id)
-			ldf_dict[key] = data_type_id, value
+			ldf_dict[str(key)] = f'[{str(data_type_id)}:{str(value)}]'
 	else:
 		raise NotImplementedError
 

@@ -15,18 +15,21 @@ from tkinter import BooleanVar, END, Menu
 
 import amf3
 import viewer
+import json
 import ldf
 from bitstream import c_bit, c_bool, c_float, c_int, c_int64, c_ubyte, c_uint, c_uint64, c_ushort, ReadStream
 from structparser import StructParser
 
 component_name = OrderedDict()
 component_name[108] = "Component 108",
+component_name[24] = None
 component_name[61] = "ModuleAssembly",
 component_name[1] = "ControllablePhysics",
 component_name[3] = "SimplePhysics",
 component_name[20] = "RigidBodyPhantomPhysics",
 component_name[30] = "VehiclePhysics 30",
 component_name[40] = "PhantomPhysics",
+component_name[77] = "SoundTrigger",
 component_name[7] = "Destructible", "Stats"
 component_name[23] = "Stats", "Collectible"
 component_name[26] = "Pet",
@@ -41,6 +44,7 @@ component_name[48] = "Stats", "Rebuild"
 component_name[25] = "MovingPlatform",
 component_name[49] = "Switch",
 component_name[16] = "Vendor",
+component_name[100] = "Donation",
 component_name[6] = "Bouncer",
 component_name[39] = "ScriptedActivity",
 component_name[71] = "RacingControl",
@@ -67,6 +71,7 @@ component_name[95] = None
 component_name[104] = None
 component_name[113] = None
 component_name[114] = None
+component_name[115] = "Stats", 
 comp_ids = list(component_name.keys())
 
 class ParserOutput:
@@ -119,8 +124,8 @@ class CaptureViewer(viewer.Viewer):
 
 		self._create_parsers()
 
-		with open("packetdefinitions/gm", "rb") as file:
-			self.gamemsgs = pickle.loads(zlib.decompress(file.read()))
+		with open("GameMessages.json", "rb") as file:
+			self.gamemsgs = json.load(file)
 
 		self.objects = []
 		self.lot_data = {}
@@ -131,7 +136,8 @@ class CaptureViewer(viewer.Viewer):
 		self.retry_with_script_component = BooleanVar(value=config["parse"]["retry_with_script_component"])
 		self.retry_with_trigger_component = BooleanVar(value=config["parse"]["retry_with_trigger_component"])
 		self.retry_with_phantom_component = BooleanVar(value=config["parse"]["retry_with_phantom_component"])
-		self.default_capture_path = config["paths"]["default_capture_path"]
+		self.last_capture_path = config["paths"]["default_capture_path"]
+		self.default_capture_path = self.last_capture_path
 
 	def _create_parsers(self):
 		type_handlers = {}
@@ -177,7 +183,12 @@ class CaptureViewer(viewer.Viewer):
 		self.tree.tag_configure("error", foreground="red")
 
 	def askopener(self):
-		return filedialog.askopenfilenames(filetypes=[("Zip", "*.zip")], initialdir=self.default_capture_path)
+		file_path = filedialog.askopenfilenames(filetypes=[("Zip", "*.zip")], initialdir=self.last_capture_path)
+		if file_path == "" or file_path == ():
+			self.last_capture_path = self.default_capture_path
+		else:
+			self.last_capture_path = os.path.dirname(file_path[0])
+		return file_path
 
 	def load(self, captures) -> None:
 		self.objects = []
@@ -245,6 +256,37 @@ class CaptureViewer(viewer.Viewer):
 		else:
 			uncompressed = stream.read(bytes, length=size)
 		return ldf.from_ldf(ReadStream(uncompressed))
+	
+	def _parse_ldf_config(self, lot, ldf, component_types):
+		print(f'Parsing LDF for lot {lot}')
+		if "componentWhitelist" in ldf:
+			whitelists = [[],[2, 7, 11, 24, 42, 1, 3, 10],[],[],[]]
+			whitelist_to_apply = whitelists[int(ldf["componentWhitelist"][1])]
+			# print(f"{ldf['componentWhitelist'][1]} {whitelist_to_apply}")
+			for i in component_types:
+				if int(i) not in whitelist_to_apply:
+					print(f"Removing component {i} from lot {lot}")
+					component_types.remove(i)
+		
+		if "inInventory" not in ldf:
+			if 42 in component_types:
+				print(f"Adding component 115 from lot {lot}")
+				component_types.append(115)
+		
+		if 42 in component_types:
+			if "modelBehaviors" not in ldf:
+				has_physics_component = False
+				for physics_component in [1, 3, 18, 20, 30, 40, 46, 47]:
+					if physics_component in component_types:
+						has_physics_component = True
+						break
+				if not has_physics_component:
+					print(f"Adding component 3 from lot {lot}")
+					component_types.append(3)
+			else:
+				raise NotImplementedError("need to implement having modelBehaviors!")
+
+		return component_types
 
 	def _parse_creation(self, packet_name, packet, retry_with_components=[]):
 		packet.skip_read(1)
@@ -256,6 +298,9 @@ class CaptureViewer(viewer.Viewer):
 			if obj.object_id == object_id: # We've already parsed this object (can happen due to ghosting)
 				return
 		lot = packet.read(c_int)
+		id_ = packet.read(str, length_type=c_ubyte)
+		_ = packet.read(c_uint)
+		has_ldf = packet.read(c_bit)
 		if lot not in self.lot_data:
 			try:
 				lot_name = self.db.execute("select name from Objects where id == "+str(lot)).fetchone()[0]
@@ -272,6 +317,12 @@ class CaptureViewer(viewer.Viewer):
 				component_types.remove(42)
 				component_types.remove(11)
 
+			if has_ldf:
+				ldf = self._compressed_ldf_handler(packet)
+				to_parse = str(ldf).replace("'", '"')
+				ldf = json.loads(to_parse)
+				component_types = self._parse_ldf_config(lot, ldf, component_types)
+			
 			parsers = OrderedDict()
 			try:
 				component_types.sort(key=comp_ids.index)
@@ -287,7 +338,7 @@ class CaptureViewer(viewer.Viewer):
 			self.lot_data[lot] = lot_name, parsers, error
 		else:
 			lot_name, parsers, error = self.lot_data[lot]
-		id_ = packet.read(str, length_type=c_ubyte) + " " + lot_name
+		id_ = id_ + " " + lot_name
 		packet.read_offset = 0
 		parser_output = ParserOutput()
 		with parser_output:
@@ -319,7 +370,7 @@ class CaptureViewer(viewer.Viewer):
 
 		obj = CaptureObject(network_id=network_id, object_id=object_id, lot=lot)
 		self.objects.append(obj)
-		obj.entry = self.tree.insert("", END, text=packet_name, values=(id_, parser_output.text.replace("{", "<crlbrktopen>").replace("}", "<crlbrktclose>").replace("\\", "<backslash>")), tags=parser_output.tags)
+		obj.entry = self.tree.insert("", END, text=packet_name, values=(id_, parser_output.text), tags=parser_output.tags)
 
 	def _parse_serialization(self, packet, parser_output, parsers, is_creation=False):
 		parser_output.append(self.serialization_header_parser.parse(packet))
@@ -371,7 +422,7 @@ class CaptureViewer(viewer.Viewer):
 
 		tags = []
 		try:
-			message = self.gamemsgs["messages"][msg_id]
+			message = self.gamemsgs["messages"][str(msg_id)]
 			msg_name = message["name"]
 			network = message["network"]
 			param_values = OrderedDict()

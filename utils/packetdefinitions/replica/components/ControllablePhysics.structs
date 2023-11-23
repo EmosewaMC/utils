@@ -14,8 +14,8 @@ if creation:
 		[u32] - ???
 		[u32] - ???
 [bit] - flag
-	[float] - ???
-	[float] - ???
+	[float] - gravityScale
+	[float] - speedMultiplier
 [bit] - flag
 	[float] - ???
 	[bit] - ???

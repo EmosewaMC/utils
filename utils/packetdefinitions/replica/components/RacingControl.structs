@@ -7,9 +7,9 @@ start of ScriptedActivity
 		[u64] - player object id
 		constant size 10 loop
 		[float] - ???
-		[float] - ???
-		[float] - ???
-		[float] - ???
+		[float] - bestTime
+		[float] - bestLapTime
+		[float] - something
 		[float] - ???
 		[float] - ???
 		[float] - ???
@@ -26,21 +26,24 @@ end of ScriptedActivity
 			break
 		[s64] - player object id
 		[s64] - car object id
-		[u32] - ???
-		[bit] - ???
+		[u32] - playerIndex
+		[bit] - playerLoaded
 [bit] - flag
 	while True:
 		not_break=[bit] - flag
 		if not not_break:
 			break
 		[s64] - player object id
-		[u32] - ???
+		[u32] - playerPlacement
 end of something
 [bit] - flag
-	[u16] - remaining laps?
+	[u16] - remaining laps
 	[u16-wstring] - path name
 [bit] - flag
-	[bit] - flag
-		[s64] - ???
-		[float] - ???
-		[float] - ???
+	while True:
+		not_break=[bit] - flag
+		if not not_break:
+			break
+		[s64] - player object id
+		[float] - bestLapTime
+		[float] - bestTime
