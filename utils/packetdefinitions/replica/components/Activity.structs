@@ -1,0 +1,15 @@
+Component 50 - ScriptedActivity
+[bit] - flag
+	[u32] - count
+		[u64] - player object id
+		constant size 10 loop
+		[float] - ???
+		[float] - bestTime
+		[float] - bestLapTime
+		[float] - something
+		[float] - ???
+		[float] - ???
+		[float] - ???
+		[float] - ???
+		[float] - ???
+		[float] - ???

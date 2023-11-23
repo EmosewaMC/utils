@@ -43,8 +43,9 @@ component_name[60] = "BaseCombatAI",
 component_name[48] = "Stats", "Rebuild"
 component_name[25] = "MovingPlatform",
 component_name[49] = "Switch",
+component_name[50] = "Activity",
 component_name[16] = "Vendor",
-component_name[100] = "Donation",
+component_name[100] = "Vendor", "Donation",
 component_name[6] = "Bouncer",
 component_name[39] = "ScriptedActivity",
 component_name[71] = "RacingControl",
@@ -370,11 +371,7 @@ class CaptureViewer(viewer.Viewer):
 						print("retry was not able to resolve parsing error")
 						raise
 					retry_with_components = []
-					if self.retry_with_script_component.get():
-						retry_with_components.append(5)
-					elif self.retry_with_trigger_component.get():
-						retry_with_components.append(69)
-					elif self.retry_with_phantom_component.get():
+					if self.retry_with_phantom_component.get():
 						retry_with_components.append(40)
 
 					if retry_with_components:
@@ -421,7 +418,7 @@ class CaptureViewer(viewer.Viewer):
 			parser_output.tags.append("error")
 		else:
 			error = ""
-		self.tree.insert(obj.entry, END, text=packet_name, values=(error, parser_output.text.replace("{", "<crlbrktopen>").replace("}", "<crlbrktclose>").replace("\\", "<backslash>")), tags=parser_output.tags)
+		self.tree.insert(obj.entry, END, text=packet_name, values=(error, parser_output.text), tags=parser_output.tags)
 
 	def _parse_game_message(self, packet_name, packet):
 		object_id = packet.read(c_int64)
