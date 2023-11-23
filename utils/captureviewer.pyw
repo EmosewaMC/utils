@@ -258,18 +258,23 @@ class CaptureViewer(viewer.Viewer):
 		return ldf.from_ldf(ReadStream(uncompressed))
 	
 	def _parse_ldf_config(self, lot, ldf, component_types):
-		print(f'Parsing LDF for lot {lot}')
+		print(f'Parsing LDF for lot {lot} components {component_types}')
 		if "componentWhitelist" in ldf:
 			whitelists = [[],[2, 7, 11, 24, 42, 1, 3, 10],[],[],[]]
-			whitelist_to_apply = whitelists[int(ldf["componentWhitelist"][1])]
-			# print(f"{ldf['componentWhitelist'][1]} {whitelist_to_apply}")
+			whitelist_number = int(ldf["componentWhitelist"][1])
+			assert whitelist_number not in (0, 2, 3, 4)
+			whitelist_to_apply = whitelists[whitelist_number]
+			print(f"{ldf['componentWhitelist'][1]} {whitelist_to_apply}")
+			new_component_types = []
 			for i in component_types:
-				if int(i) not in whitelist_to_apply:
+				print(i)
+				if int(i) in whitelist_to_apply:
 					print(f"Removing component {i} from lot {lot}")
-					component_types.remove(i)
+					new_component_types.append(i)
+			component_types = new_component_types
 		
 		if "inInventory" not in ldf:
-			if 42 in component_types:
+			if 42 in component_types and 7 not in component_types:
 				print(f"Adding component 115 from lot {lot}")
 				component_types.append(115)
 		
@@ -281,10 +286,20 @@ class CaptureViewer(viewer.Viewer):
 						has_physics_component = True
 						break
 				if not has_physics_component:
-					print(f"Adding component 3 from lot {lot}")
+					print(f"Adding component simple physics from lot {lot}")
 					component_types.append(3)
 			else:
-				raise NotImplementedError("need to implement having modelBehaviors!")
+				has_physics_component = False
+				for physics_component in [1, 3, 18, 20, 30, 40, 46, 47]:
+					if physics_component in component_types:
+						has_physics_component = True
+						break
+				if not has_physics_component:
+					print(f"Adding component controllable physics from lot {lot}")
+					component_types.append(1)
+
+		if lot == 12434:
+			print(component_types)
 
 		return component_types
 
@@ -313,9 +328,6 @@ class CaptureViewer(viewer.Viewer):
 				if 3 in component_types:
 					component_types.remove(3)
 
-			if 26 in component_types:
-				component_types.remove(42)
-				component_types.remove(11)
 
 			if has_ldf:
 				ldf = self._compressed_ldf_handler(packet)
@@ -323,6 +335,10 @@ class CaptureViewer(viewer.Viewer):
 				ldf = json.loads(to_parse)
 				component_types = self._parse_ldf_config(lot, ldf, component_types)
 			
+			if 26 in component_types:
+				component_types.remove(42)
+				component_types.remove(11)
+
 			parsers = OrderedDict()
 			try:
 				component_types.sort(key=comp_ids.index)
